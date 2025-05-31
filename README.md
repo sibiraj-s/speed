@@ -31,6 +31,14 @@ Server found: mlab1 at City, Country
 🚀 Test complete!
 ```
 
+## Install
+
+You can also install the CLI directly using Go:
+
+```zsh
+go install github.com/sibiraj-s/speed@latest
+```
+
 ## How it works
 
 - Uses [ndt7-client-go](https://github.com/m-lab/ndt7-client-go) to locate the nearest M-Lab server and perform speed
