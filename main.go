@@ -12,6 +12,7 @@ import (
 	"github.com/m-lab/ndt7-client-go"
 	probing "github.com/prometheus-community/pro-bing"
 	"github.com/spf13/viper"
+	"github.com/yarlson/pin"
 )
 
 func ping(fqdn string) int64 {
@@ -83,18 +84,23 @@ func main() {
 		return
 	}
 
-	fmt.Println("\nAgreed to privacy policy: YES")
+	fmt.Println("\n✔ Agreed to privacy policy")
+	fmt.Println("")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	fmt.Println("\nRetrieving speedtest.net configuration...")
+	// Use pin spinner for status
+	spinner := pin.New("Retrieving speedtest configuration...",
+		pin.WithSpinnerColor(pin.ColorCyan),
+		pin.WithTextColor(pin.ColorCyan),
+	)
+	cancelSpinner := spinner.Start(context.Background())
+	defer cancelSpinner()
 
-	// create a ndt7 client
 	client := ndt7.NewClient("speed", "1.0.0")
-
-	// fetch nearest server details
 	targets, err := client.Locate.Nearest(ctx, "ndt/ndt7")
+	spinner.Stop()
 	if err != nil {
 		log.Fatalf("Failed to locate nearest server: %v", err)
 	}
@@ -104,7 +110,7 @@ func main() {
 	}
 
 	target := targets[0]
-	fmt.Printf("\nServer found: %s at %s, %s\n\n", target.Machine, target.Location.City, target.Location.Country)
+	fmt.Printf("Server found: %s at %s, %s\n\n", target.Machine, target.Location.City, target.Location.Country)
 
 	// --- Ping Test ---
 	fmt.Printf("%s %-18s %8d ms\n", "↔", "Ping (avg)    :", ping(target.Machine))

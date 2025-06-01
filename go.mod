@@ -6,6 +6,7 @@ require (
 	github.com/m-lab/ndt7-client-go v0.9.1
 	github.com/prometheus-community/pro-bing v0.7.0
 	github.com/spf13/viper v1.20.1
+	github.com/yarlson/pin v0.9.1
 )
 
 require (
