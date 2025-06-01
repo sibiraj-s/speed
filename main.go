@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/m-lab/ndt7-client-go"
-	"github.com/m-lab/ndt7-client-go/spec"
 	probing "github.com/prometheus-community/pro-bing"
 )
 
@@ -29,16 +28,14 @@ func ping(fqdn string) int64 {
 	return int64(stats.AvgRtt / time.Millisecond)
 }
 
-func calculateSpeed(i *spec.AppInfo) float64 {
-	if i == nil {
+// calculateMbps computes Mbps from total bytes and elapsed microseconds
+func calculateMbps(bytes int64, elapsedMicroseconds int64) float64 {
+	if elapsedMicroseconds == 0 {
 		return 0
 	}
-	elapsedSeconds := float64(i.ElapsedTime) / 1e6
-	if elapsedSeconds > 0 {
-		return float64(i.NumBytes*8) / elapsedSeconds / 1e6
-	}
-
-	return elapsedSeconds
+	seconds := float64(elapsedMicroseconds) / 1e6
+	mbps := (float64(bytes) * 8) / seconds / 1e6
+	return mbps
 }
 
 func main() {
@@ -71,32 +68,38 @@ func main() {
 	if err != nil {
 		log.Fatalf("Download error: %v", err)
 	}
-	var downloadSpeed float64
+	var totalDownloadBytes int64
+	var totalDownloadElapsed int64
 	fmt.Printf("%s %-18s", "↓", "Download speed:")
 	for m := range downloadChan {
-		speed := calculateSpeed(m.AppInfo)
-		if speed > downloadSpeed {
-			downloadSpeed = speed
+		if m.AppInfo != nil {
+			totalDownloadBytes = m.AppInfo.NumBytes
+			totalDownloadElapsed = m.AppInfo.ElapsedTime
+			speed := calculateMbps(totalDownloadBytes, totalDownloadElapsed)
+			fmt.Printf("%8.2f Mbps\r%s %-18s", speed, "↓", "Download speed:")
 		}
-		fmt.Printf("%8.2f Mbps\r%s %-18s", speed, "↓", "Download speed:")
 	}
-	fmt.Printf("%8.2f Mbps\n", downloadSpeed)
+	finalDownloadSpeed := calculateMbps(totalDownloadBytes, totalDownloadElapsed)
+	fmt.Printf("%8.2f Mbps\n", finalDownloadSpeed)
 
 	// --- Upload Test ---
 	uploadChan, err := client.StartUpload(ctx)
 	if err != nil {
 		log.Fatalf("Upload error: %v", err)
 	}
-	var uploadSpeed float64
+	var totalUploadBytes int64
+	var totalUploadElapsed int64
 	fmt.Printf("%s %-18s", "↑", "Upload speed  :")
 	for m := range uploadChan {
-		speed := calculateSpeed(m.AppInfo)
-		if speed > uploadSpeed {
-			uploadSpeed = speed
+		if m.AppInfo != nil {
+			totalUploadBytes = m.AppInfo.NumBytes
+			totalUploadElapsed = m.AppInfo.ElapsedTime
+			speed := calculateMbps(totalUploadBytes, totalUploadElapsed)
+			fmt.Printf("%8.2f Mbps\r%s %-18s", speed, "↑", "Upload speed  :")
 		}
-		fmt.Printf("%8.2f Mbps\r%s %-18s", speed, "↑", "Upload speed  :")
 	}
-	fmt.Printf("%8.2f Mbps\n", uploadSpeed)
+	finalUploadSpeed := calculateMbps(totalUploadBytes, totalUploadElapsed)
+	fmt.Printf("%8.2f Mbps\n", finalUploadSpeed)
 
 	fmt.Println("\n🚀 Test complete!")
 }
