@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/m-lab/ndt7-client-go"
 	probing "github.com/prometheus-community/pro-bing"
+	"github.com/spf13/viper"
 )
 
 func ping(fqdn string) int64 {
@@ -38,7 +42,49 @@ func calculateMbps(bytes int64, elapsedMicroseconds int64) float64 {
 	return mbps
 }
 
+// promptUserAgreement prompts the user to agree to the M-Lab privacy policy before running the test
+func promptUserAgreement() bool {
+	configDir := os.Getenv("HOME") + "/.config"
+	configPath := configDir + "/.speed.yml"
+
+	viper.SetConfigName(".speed")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(configDir)
+
+	err := viper.ReadInConfig()
+	if err == nil && viper.GetBool("agreed_to_policy") {
+		return true
+	}
+
+	fmt.Println("Before running the speed test, please review the Measurement Lab privacy policy:")
+	fmt.Println("https://www.measurementlab.net/privacy")
+	fmt.Println("\nBy continuing, you agree to the data policy, which includes retention and publication of IP addresses.")
+	fmt.Print("Type 'yes' to agree and continue: ")
+
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(strings.ToLower(input))
+	if input != "yes" {
+		fmt.Println("You must agree to the data policy to proceed. Exiting.")
+		return false
+	}
+
+	viper.Set("agreed_to_policy", true)
+	err = viper.WriteConfigAs(configPath)
+	if err != nil {
+		fmt.Println("Warning: could not save agreement to config file.")
+	}
+
+	return true
+}
+
 func main() {
+	if !promptUserAgreement() {
+		return
+	}
+
+	fmt.Println("\nAgreed to privacy policy: YES")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
