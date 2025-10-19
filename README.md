@@ -39,11 +39,17 @@ You can also install the CLI directly using Go:
 go install github.com/sibiraj-s/speed@latest
 ```
 
-Or with homebrew
+Or with [homebrew](https://brew.sh/)
 
 ```bash
 brew tap sibiraj-s/speed https://github.com/sibiraj-s/speed
 brew install --HEAD sibiraj-s/speed/speed
+```
+
+or with [mise](https://mise.jdx.dev/)
+
+```bash
+mise use go:github.com/sibiraj-s/speed
 ```
 
 ## How it works
