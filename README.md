@@ -5,13 +5,13 @@ A simple CLI tool to measure internet speed (ping, download, and upload) using t
 
 ## Requirements
 
-- Go 1.23 or later
+- Go 1.25 or later
 
 ## Usage
 
 Clone the repository and build the binary:
 
-```zsh
+```bash
 git clone https://github.com/sibiraj-s/speed.git
 cd speed
 go run .
@@ -35,7 +35,7 @@ Server found: mlab1 at City, Country
 
 You can also install the CLI directly using Go:
 
-```zsh
+```bash
 go install github.com/sibiraj-s/speed@latest
 ```
 
