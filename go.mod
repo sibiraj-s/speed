@@ -1,6 +1,6 @@
 module github.com/sibiraj-s/speed
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/m-lab/ndt7-client-go v0.9.1
